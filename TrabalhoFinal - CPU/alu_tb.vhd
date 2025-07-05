@@ -1,13 +1,13 @@
 --------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
+-- Company:
+-- Engineer:
 --
--- Create Date:   16:44:12 07/05/2025 
--- Design Name:   
--- Module Name:   alu_tb - Behavioral 
+-- Create Date:   16:44:12 07/05/2025
+-- Design Name:
+-- Module Name:   alu_tb - Behavioral
 -- Project Name:  TrabalhoFinal
--- Target Device: 
--- Tool versions: 
+-- Target Device:
+-- Tool versions:
 -- Description:   Testbench para a ALU (assíncrona) - Foco em operadores aritméticos
 --
 -- Dependencies:  alu.vhd
@@ -23,7 +23,7 @@ USE ieee.numeric_std.ALL; -- ESSENCIAL: para lidar com unsigned em A, B, R
 ENTITY alu_tb IS
 END alu_tb;
 
-ARCHITECTURE behavior OF alu_tb IS 
+ARCHITECTURE behavior OF alu_tb IS
 
     -- Component Declaration for the Unit Under Test (ALU)
     COMPONENT alu
@@ -47,7 +47,7 @@ ARCHITECTURE behavior OF alu_tb IS
     signal CMD_s : std_logic_vector(3 downto 0) := (others => '0');
 
     -- Sinais de OUTPUT da ALU
-    signal R_s        : unsigned(7 downto 0); 
+    signal R_s        : unsigned(7 downto 0);
     signal ZERO_s     : std_logic;
     signal NEGATIVE_s : std_logic;
     signal OVERFLOW_s : std_logic;
@@ -56,8 +56,8 @@ ARCHITECTURE behavior OF alu_tb IS
     signal SMALLER_s  : std_logic;
 
     -- Período de espera para estabilização da lógica combinacional
-    constant PROPAGATION_DELAY : time := 10 ns; 
-    
+    constant PROPAGATION_DELAY : time := 10 ns;
+
 BEGIN
     -- Instantiate the Unit Under Test (ALU)
     uut: alu PORT MAP (
@@ -75,12 +75,12 @@ BEGIN
 
     -- Stimulus process
     stim_proc: process
-    begin        
+    begin
         -- Inicialização
         A_s <= to_unsigned(0, 8);
         B_s <= to_unsigned(0, 8);
         CMD_s <= "0000"; -- Default para ADD
-        WAIT FOR PROPAGATION_DELAY; 
+        WAIT FOR PROPAGATION_DELAY;
         WAIT FOR 0 ns; -- Adicionado: Espera por 1 delta cycle para que os sinais de saída atualizem
 
         REPORT "--- Teste de Operacoes Aritmeticas da ALU ---" SEVERITY NOTE;
@@ -214,8 +214,8 @@ BEGIN
         -- Teste 10: INC  (8 -> 9, sem overflow)
         REPORT "Teste 10: INC (8 -> 9)" SEVERITY NOTE;
         A_s    <= to_unsigned(8, 8);
-        B_s    <= to_unsigned(0, 8);      -- B não é usado
-        CMD_s  <= "0010";                 -- INC
+        B_s    <= to_unsigned(0, 8);      -- ss == 00 (INC)
+        CMD_s  <= "0010";                 -- opcode INC/DEC
         WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
         ASSERT R_s = to_unsigned(9, 8)                    REPORT "T10 INC - Resultado"  SEVERITY ERROR;
         ASSERT ZERO_s = '0'                               REPORT "T10 INC - ZERO"       SEVERITY ERROR;
@@ -235,7 +235,8 @@ BEGIN
         -- Teste 12: DEC  (0 -> 255, overflow)
         REPORT "Teste 12: DEC (0 -> 255) OVERFLOW" SEVERITY NOTE;
         A_s   <= to_unsigned(0, 8);
-        CMD_s <= "0011";                                  -- DEC
+        B_s <= "00000001"; -- ss = 01 (DEC)
+        CMD_s <= "0010";
         WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
         ASSERT R_s = to_unsigned(255, 8)                  REPORT "T12 DEC ovf - Resultado" SEVERITY ERROR;
         ASSERT ZERO_s = '0'                               REPORT "T12 DEC ovf - ZERO"      SEVERITY ERROR;
@@ -245,7 +246,8 @@ BEGIN
         -- Teste 13: DEC  (10 -> 9, sem overflow)
         REPORT "Teste 13: DEC (10 -> 9)" SEVERITY NOTE;
         A_s   <= to_unsigned(10, 8);
-        CMD_s <= "0011";                                  -- DEC
+        B_s <= "00000001"; -- DEC
+        CMD_s <= "0010";
         WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
         ASSERT R_s = to_unsigned(9, 8)                    REPORT "T13 DEC - Resultado" SEVERITY ERROR;
         ASSERT OVERFLOW_s = '0'                           REPORT "T13 DEC - OVERFLOW"  SEVERITY ERROR;
@@ -255,7 +257,7 @@ BEGIN
         --------------------------------------------------------------------
         -- Teste 14: AND  (F0 & 0F = 00)
         REPORT "Teste 14: AND (0xF0 & 0x0F = 0x00)" SEVERITY NOTE;
-        A_s <= x"F0";  B_s <= x"0F";  CMD_s <= "0100"; -- AND
+        A_s <= x"F0";  B_s <= x"0F";  CMD_s <= "0011"; -- AND
         WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
         ASSERT R_s = x"00" REPORT "T14 AND - Resultado"  SEVERITY ERROR;
         ASSERT ZERO_s = '1' REPORT "T14 AND - ZERO"      SEVERITY ERROR;
@@ -264,7 +266,7 @@ BEGIN
 
         -- Teste 15: OR   (F0 | 0F = FF)
         REPORT "Teste 15: OR  (0xF0 | 0x0F = 0xFF)" SEVERITY NOTE;
-        CMD_s <= "0101"; -- OR
+        CMD_s <= "0100"; -- OR
         WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
         ASSERT R_s = x"FF" REPORT "T15 OR - Resultado"   SEVERITY ERROR;
         ASSERT ZERO_s = '0' REPORT "T15 OR - ZERO"       SEVERITY ERROR;
@@ -272,40 +274,46 @@ BEGIN
 
         -- Teste 16: NOT  (~F0 = 0F)
         REPORT "Teste 16: NOT (~0xF0 = 0x0F)" SEVERITY NOTE;
-        CMD_s <= "0110"; -- NOT
+        CMD_s <= "0101"; -- NOT
+        B_s <= (others => '0'); -- nn = 00 (NOT)
         WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
         ASSERT R_s = x"0F" REPORT "T16 NOT - Resultado"  SEVERITY ERROR;
         ASSERT NEGATIVE_s = '0' REPORT "T16 NOT - NEG"   SEVERITY ERROR;
 
         -- Teste 17: XOR (AA xor 55 = FF)
         REPORT "Teste 17: XOR (0xAA ^ 0x55 = 0xFF)" SEVERITY NOTE;
-        A_s <= x"AA";  B_s <= x"55";  CMD_s <= "0111"; -- XOR
+        A_s <= x"AA";  B_s <= x"55";  CMD_s <= "0110"; -- XOR
         WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
         ASSERT R_s = x"FF" REPORT "T17 XOR - Resultado" SEVERITY ERROR;
         ASSERT NEGATIVE_s = '1' REPORT "T17 XOR - NEG"  SEVERITY ERROR;
 
         -- Teste 18: ROL  (1000_0001 -> 0000_0011)
         REPORT "Teste 18: ROL (0x81 -> 0x03)" SEVERITY NOTE;
-        A_s <= "10000001";  CMD_s <= "1000"; -- ROL
+        A_s <= "10000001";
+        B_s <= "00000000"; -- nn = 00 (ROL)
+        CMD_s <= "0111"; -- ROL
         WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
         ASSERT R_s = "00000011" REPORT "T18 ROL - Resultado" SEVERITY ERROR;
         ASSERT NEGATIVE_s = '0' REPORT "T18 ROL - NEG"       SEVERITY ERROR;
 
         -- Teste 19: ROR  (1000_0001 -> 1100_0000)
         REPORT "Teste 19: ROR (0x81 -> 0xC0)" SEVERITY NOTE;
-        CMD_s <= "1001"; -- ROR
+        B_s <= "00000001"; -- nn = 01 (ROR)
+        CMD_s <= "0111"; -- ROR
         WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
         ASSERT R_s = "11000000" REPORT "T19 ROR - Resultado" SEVERITY ERROR;
         ASSERT NEGATIVE_s = '1' REPORT "T19 ROR - NEG"       SEVERITY ERROR;
 
         -- Teste 20: LSL  (1000_0001 -> 0000_0010)  e  LSR (-> 0100_0000)
         REPORT "Teste 20: LSL (0x81 -> 0x02)" SEVERITY NOTE;
-        CMD_s <= "1010"; -- LSL
+        B_s <= "00000010"; -- nn = 10 (LSL)
+        CMD_s <= "0111"; -- LSL
         WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
         ASSERT R_s = "00000010" REPORT "T20 LSL - Resultado" SEVERITY ERROR;
 
         REPORT "Teste 21: LSR (0x81 -> 0x40)" SEVERITY NOTE;
-        CMD_s <= "1011"; -- LSR
+        B_s <= "00000011"; -- nn = 11 (LSR)
+        CMD_s <= "0111"; -- LSR
         WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
         ASSERT R_s = "01000000" REPORT "T21 LSR - Resultado" SEVERITY ERROR;
 

@@ -47,9 +47,6 @@ end alu;
 architecture Behavioral of alu is
     -- signals
     signal temp_R : unsigned(7 downto 0);
-    signal temp_zero     : std_logic;
-    signal temp_negative : std_logic;
-    signal temp_equal    : std_logic;
     signal temp_greater  : std_logic;
     signal temp_smaller  : std_logic;
     signal temp_OVERFLOW : std_logic;
@@ -65,6 +62,8 @@ begin
     temp_overflow <= '0';
 
     case CMD is
+
+        -- Operadores aritméticos
         when "0000" => -- ADD
             sum_sub_res := ("0" & A) + ("0" & B);
             temp_R        <= sum_sub_res(7 downto 0);
@@ -75,45 +74,55 @@ begin
             temp_R        <= sum_sub_res(7 downto 0);
             temp_overflow <= sum_sub_res(8);
 
-        when "0010" => -- INC
-			 temp_R <= A + 1;
-			 if A = to_unsigned(255,8) then
-				  temp_overflow <= '1';
-			 else
-				  temp_overflow <= '0';
-			 end if;
+		  when "0010" =>
+            case B(1 downto 0) is
+                when "00" =>                     -- INC  (Rx ← Rx + 1)
+                    temp_R        <= A + 1;
+				    if A = "11111111" then
+                        temp_overflow <= '1';
+                    else
+                        temp_overflow <= '0';
+                    end if;
 
-			when "0011" => -- DEC
-				 temp_R <= A - 1;
-				 if A = to_unsigned(0,8) then
-					  temp_overflow <= '1';
-				 else
-					  temp_overflow <= '0';
-				 end if;
+                when "01" =>                     -- DEC  (Rx ← Rx - 1)
+                    temp_R        <= A - 1;
+                    if A = "00000000" then
+                        temp_overflow <= '1';
+                    else
+                        temp_overflow <= '0';
+                    end if;
 
-        when "0100" => -- AND
+                when others =>
+                    temp_R        <= (others => '0');
+                    temp_overflow <= '0';
+            end case;
+
+        -- Operadores lógicos
+        when "0011" => -- AND
             temp_R <= A and B;
 
-        when "0101" => -- OR
+        when "0100" => -- OR
             temp_R <= A or B;
 
-        when "0110" => -- NOT
+        when "0101" => -- NOT
             temp_R <= not A;
 
-        when "0111" => -- XOR
+        when "0110" => -- XOR
             temp_R <= A xor B;
 
-        when "1000" => -- ROL
-            temp_R <= A(6 downto 0) & A(7);
-
-        when "1001" => -- ROR
-            temp_R <= A(0) & A(7 downto 1);
-
-        when "1010" => -- LSL
-            temp_R <= A(6 downto 0) & '0';
-
-        when "1011" => -- LSR
-            temp_R <= '0' & A(7 downto 1);
+        when "0111" => -- ROL/ROR/LSL/LSR
+            case B(1 downto 0) is
+                when "00" => -- ROL
+                    temp_R <= A(6 downto 0) & A(7);
+                when "01" => -- ROR
+                    temp_R <= A(0) & A(7 downto 1);
+                when "10" => -- LSL
+                    temp_R <= A(6 downto 0) & '0';
+                when "11" => -- LSR
+                    temp_R <= '0' & A(7 downto 1);
+                when others =>
+                    temp_R <= (others => '0');
+            end case;
 
         when others =>
             temp_R        <= (others => '0');

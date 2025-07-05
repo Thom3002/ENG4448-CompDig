@@ -113,54 +113,57 @@ BEGIN
 							ALU_A <= registers(to_integer(IR(3 DOWNTO 2)));
 							ALU_B <= registers(to_integer(IR(1 DOWNTO 0)));
 							ALU_CMD <= "0000"; -- add
+							state <= st_execute;
 
-						state <= st_execute;
+						
 						-- sub Rx,Ry "0001 Rx Ry" Rx ← Rx − Ry
 						ELSIF IR(7 DOWNTO 4) = "0001" THEN
 							ALU_A <= unsigned(registers(to_integer(IR(3 DOWNTO 2))));
 							ALU_B <= unsigned(registers(to_integer(IR(1 DOWNTO 0))));
 							ALU_CMD <= "0001";
+							state <= st_execute;
 
 						-- inc/dec Rx "0010 Rx ss" ss=00 inc, 01 dec
 						ELSIF IR(7 DOWNTO 4) = "0010" THEN
-							ALU_A <= unsigned(registers(to_integer(IR(3 DOWNTO 2))));
-							IF IR(1 DOWNTO 0) = "00" THEN -- inc
-								ALU_B <= to_unsigned(1, 8); -- 00000001 (incrementa 1)
-								ALU_CMD <= "0000"; -- add
-							ELSE -- dec
-								ALU_B <= to_unsigned(1, 8);
-								ALU_CMD <= "0001"; -- sub
-							END IF;
+							ALU_A   <= registers(to_integer(IR(3 DOWNTO 2)));   -- Rx
+							ALU_B   <= ("000000" & IR(1 DOWNTO 0));
+							ALU_CMD <= "0010";
+							state <= st_execute;							
 
 						-- and Rx,Ry "0011 Rx Ry"
 						ELSIF IR(7 DOWNTO 4) = "0011" THEN
 							ALU_A <= unsigned(registers(to_integer(IR(3 DOWNTO 2))));
 							ALU_B <= unsigned(registers(to_integer(IR(1 DOWNTO 0))));
-							ALU_CMD <= "0010";
+							ALU_CMD <= "0011";
+							state <= st_execute;
 
 						-- or Rx,Ry "0100 Rx Ry"
 						ELSIF IR(7 DOWNTO 4) = "0100" THEN
 							ALU_A <= unsigned(registers(to_integer(IR(3 DOWNTO 2))));
 							ALU_B <= unsigned(registers(to_integer(IR(1 DOWNTO 0))));
-							ALU_CMD <= "0011";
+							ALU_CMD <= "0100";
+							state <= st_execute;
 
 						-- not Rx      "0101 Rx 00"  Rx ? ~Rx
 						elsif IR(7 downto 4) = "0101" then
 							 ALU_A   <= registers(to_integer(IR(3 downto 2)));
 							 ALU_B   <= ("000000" & IR(1 downto 0));
 							 ALU_CMD <= "0101";
+							 state <= st_execute;
 
 						-- xor Rx, Ry  "0110 Rx Ry"  Rx ? Rx ^ Ry
 						elsif IR(7 downto 4) = "0110" then
 							 ALU_A   <= registers(to_integer(IR(3 downto 2)));
 							 ALU_B   <= registers(to_integer(IR(1 downto 0)));
 							 ALU_CMD <= "0110";
+							 state <= st_execute;
 
 						-- rol/rOr/lsl/lsr "0111 Rx nn" nn=00 rol,01 ror,10 lsl,11 lsr
 						elsif IR(7 downto 4) = "0111" then
 							 ALU_A   <= registers(to_integer(IR(3 downto 2)));
 							 ALU_B   <= ("000000" & IR(1 downto 0));
 							 ALU_CMD <= "0111";
+							 state <= st_execute;
 
 						-- push / pop / st / ld   "1000 Rx ss"
 						ELSIF IR(7 DOWNTO 4) = "1000" THEN
@@ -203,7 +206,7 @@ BEGIN
 							 RAM_WE   <= '1';                                   -- escrita
 							 state    <= st_write;
 
-
+				
 						END IF;
 
 					WHEN st_execute =>
