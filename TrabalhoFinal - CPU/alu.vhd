@@ -56,7 +56,7 @@ begin
     begin
 
         -- default values to avoid latches
-        temp_R := (others => '0');
+        temp_R <= (others => '0');
         ZERO     <= '0';
         NEGATIVE <= '0';
         OVERFLOW <= '0';

@@ -21,21 +21,22 @@ ARCHITECTURE Behavioral OF CPU IS
 	-- UC registers
 	SIGNAL PC, IR, SP, MAR : unsigned(7 DOWNTO 0) := (OTHERS => '0');
 
-	TYPE reg_array IS ARRAY(0 TO 3) OF std_logic_vector(7 DOWNTO 0);
+	TYPE reg_array IS ARRAY(0 TO 3) OF unsigned(7 DOWNTO 0);
 	SIGNAL registers : reg_array := (
 		0 => "10000000",
 		OTHERS => (OTHERS => '0')
 	);
 
 	-- ALU signals
-	SIGNAL ALU_A, ALU_B, ALU_CMD, ALU_R : unsigned(7 DOWNTO 0) := (OTHERS => '0');
+	SIGNAL ALU_A, ALU_B, ALU_R : unsigned(7 DOWNTO 0) := (OTHERS => '0');
+	SIGNAL ALU_CMD             : unsigned(3 DOWNTO 0)  := (OTHERS => '0');
 
 	SIGNAL alu_zero   : STD_LOGIC;
     SIGNAL alu_neg    : STD_LOGIC;
     SIGNAL alu_ovf    : STD_LOGIC;
     SIGNAL alu_eq     : STD_LOGIC;
     SIGNAL alu_gt     : STD_LOGIC;
-    SIGNAL alu_lt     : STD_LOGIC;
+	SIGNAL alu_lt     : STD_LOGIC;
 
 	TYPE ALU_FLAGS_t IS RECORD
 		zero : std_logic;
@@ -47,6 +48,14 @@ ARCHITECTURE Behavioral OF CPU IS
 	END RECORD ALU_FLAGS_t;
 
 SIGNAL ALU_FLAGS : ALU_FLAGS_t := (OTHERS => '0');
+
+   -- LCD signals
+   SIGNAL lcd_rs_s: STD_LOGIC;
+   SIGNAL lcd_rw_s: STD_LOGIC;
+   SIGNAL lcd_e_s: STD_LOGIC;
+   SIGNAL lcd_data_s: STD_LOGIC_VECTOR(3 DOWNTO 0);
+   SIGNAL sf_ce0_s: STD_LOGIC;
+
 BEGIN
 	-- ALU
 	U_ALU : ENTITY work.alu
@@ -157,26 +166,26 @@ BEGIN
 						ELSIF IR(7 DOWNTO 4) = "1000" THEN
 							 -- push Rx  ss = 00
 							 IF IR(1 DOWNTO 0) = "00" THEN
-								  MAR      <= std_logic_vector(SP);            -- endereço da pilha
-								  RAM_DIN  <= registers(to_integer(IR(3 DOWNTO 2)));
+								  MAR      <= SP;            -- endereço da pilha
+								  RAM_DIN  <= std_logic_vector(registers(to_integer(IR(3 DOWNTO 2))));
 								  RAM_WE   <= '1';                            -- escreve na RAM
 								  state    <= st_write;                       -- SP -- no write
 
 							 -- pop Rx   ss = 01
 							 ELSIF IR(1 DOWNTO 0) = "01" THEN
-								  MAR      <= std_logic_vector(SP + 1);        -- SP + 1 primeiro
+								  MAR      <= SP + 1;        -- SP + 1 primeiro
 								  RAM_WE   <= '0';                            -- leitura
 								  state    <= st_write;                       -- captura dado + SP++
 
 							 -- st Rx, ADDR   ss = 10  (ADDR em PC+1)
 							 ELSIF IR(1 DOWNTO 0) = "10" THEN
-								  MAR      <= std_logic_vector(PC + 1);        -- lê ADDR no próximo byte
+								  MAR      <= PC + 1;        -- lê ADDR no próximo byte
 								  RAM_WE   <= '0';                            -- leitura
 								  state    <= st_write;                       -- faz escrita na 2ª fase
 
 							 -- ld Rx, ADDR   ss = 11
 							 ELSE                                             -- "11"
-								  MAR      <= std_logic_vector(PC + 1);        -- lê ADDR
+								  MAR      <= PC + 1;        -- lê ADDR
 								  RAM_WE   <= '0';                            -- leitura
 								  state    <= st_write;                       -- traz dado para Rx
 							 END IF;
@@ -190,7 +199,7 @@ BEGIN
 						-- str Rx, [Ry]   "1010 Rx Ry"
 						ELSIF IR(7 DOWNTO 4) = "1010" THEN
 							 MAR      <= registers(to_integer(IR(1 DOWNTO 0))); -- endereço = Ry
-							 RAM_DIN  <= registers(to_integer(IR(3 DOWNTO 2))); -- dado = Rx
+							 RAM_DIN  <= std_logic_vector(registers(to_integer(IR(3 DOWNTO 2)))); -- dado = Rx
 							 RAM_WE   <= '1';                                   -- escrita
 							 state    <= st_write;
 
@@ -228,6 +237,6 @@ BEGIN
 			END IF;
 		END IF;
 	END PROCESS;
-	RAM_ADDR <= MAR; -- memory address register
+	RAM_ADDR <= std_logic_vector(MAR); -- memory address register
 
 END Behavioral;
