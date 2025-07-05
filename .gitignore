@@ -1,18 +1,14 @@
-*.html
-TrabalhoFinal - CPU/xst/
-_xmsgs
-*.lso
-*.gise
-*.xise
-*.prj
-*.stx
-*.xst
-*.xrpt
-*.ngc
-*.ngr
-*.ngd
-*.syr
-*.xml
-*.nlf
-*.cmd_log
-TrabalhoFinal - CPU/netgen
+# Ignora todos os arquivos por padrão
+*
+
+# Exceto os arquivos .vhd e .ucf
+!*.vhd
+!*.ucf
+
+!.gitignore
+!README.md
+!readme.md
+
+!*/
+
+*/netgen

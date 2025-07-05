@@ -47,7 +47,13 @@ end alu;
 architecture Behavioral of alu is
     -- signals
     signal temp_R : unsigned(7 downto 0);
+    signal temp_zero     : std_logic;
+    signal temp_negative : std_logic;
+    signal temp_equal    : std_logic;
+    signal temp_greater  : std_logic;
+    signal temp_smaller  : std_logic;
     signal temp_OVERFLOW : std_logic;
+
 begin
 
     process (A, B, CMD)
@@ -55,26 +61,12 @@ begin
     variable sum_sub_res : unsigned(8 downto 0); -- 9 bits to handle overflow in addition/subtraction
     begin
 
-        -- default values to avoid latches
-        temp_R <= (others => '0');
-        ZERO     <= '0';
-        NEGATIVE <= '0';
-        OVERFLOW <= '0';
-        EQUAL    <= '0';
-        GREATER  <= '0';
-        SMALLER  <= '0';
-        temp_OVERFLOW <= '0';
-
         case CMD is
             when "0000" => -- ADD
                 sum_sub_res := ("0" & A) + ("0" & B); -- Faz a conta com 9 bits para evitar overflow
-                temp_R <= sum_sub_res(7 downto 0);
-                temp_OVERFLOW <= sum_sub_res(8);
 
             when "0001" => -- SUB
                 sum_sub_res := ("0" & A) - ("0" & B);
-                temp_R <= sum_sub_res(7 downto 0);
-                temp_OVERFLOW <= sum_sub_res(8);
 
             -- when "0010" => -- AND
             --     temp_R <= A and B;  -- AND
@@ -86,12 +78,20 @@ begin
             -- when "0100" => temp_R <= not A;    -- NOT
             when others =>
                 temp_R <= (others => '0');
-                temp_OVERFLOW <= '0';
         end case;
 
-        R <= temp_R;
-        OVERFLOW <= temp_OVERFLOW;
+		  temp_R        <= sum_sub_res(7 downto 0);
+        temp_overflow <= sum_sub_res(8);
 
     end process;
+
+	R <= temp_R;
+    ZERO     <= '1' when temp_R = 0   else '0';
+    NEGATIVE <= temp_R(7);
+    GREATER <= '1' when (A > B) and (temp_overflow = '0') else '0';
+	SMALLER <= '1' when (A < B) and (temp_overflow = '0') else '0';
+	EQUAL   <= '1' when (A = B) and (temp_overflow = '0') else '0';
+
+    OVERFLOW <= temp_overflow when (CMD = "0000" or CMD = "0001") else '0';
 
 end Behavioral;
