@@ -211,8 +211,107 @@ BEGIN
         ASSERT SMALLER_s = '0' REPORT "T9: Comparacao - SMALLER flag incorreta" SEVERITY ERROR;
         ASSERT EQUAL_s = '1' REPORT "T9: Comparacao - EQUAL flag incorreta" SEVERITY ERROR;
 
-        REPORT "Todos os testes da ALU concluídos." SEVERITY NOTE;
-        WAIT; -- Termina a simulação
+        -- Teste 10: INC  (8 -> 9, sem overflow)
+        REPORT "Teste 10: INC (8 -> 9)" SEVERITY NOTE;
+        A_s    <= to_unsigned(8, 8);
+        B_s    <= to_unsigned(0, 8);      -- B não é usado
+        CMD_s  <= "0010";                 -- INC
+        WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
+        ASSERT R_s = to_unsigned(9, 8)                    REPORT "T10 INC - Resultado"  SEVERITY ERROR;
+        ASSERT ZERO_s = '0'                               REPORT "T10 INC - ZERO"       SEVERITY ERROR;
+        ASSERT OVERFLOW_s = '0'                           REPORT "T10 INC - OVERFLOW"    SEVERITY ERROR;
+        ASSERT NEGATIVE_s = '0'                           REPORT "T10 INC - NEGATIVE"    SEVERITY ERROR;
+
+        -- Teste 11: INC  (255 -> 0, provoca overflow)
+        REPORT "Teste 11: INC (255 -> 0) OVERFLOW" SEVERITY NOTE;
+        A_s   <= to_unsigned(255, 8);
+        CMD_s <= "0010";                                  -- INC
+        WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
+        ASSERT R_s = to_unsigned(0, 8)                    REPORT "T11 INC ovf - Resultado" SEVERITY ERROR;
+        ASSERT ZERO_s = '1'                               REPORT "T11 INC ovf - ZERO"      SEVERITY ERROR;
+        ASSERT OVERFLOW_s = '1'                           REPORT "T11 INC ovf - OVERFLOW"  SEVERITY ERROR;
+        ASSERT NEGATIVE_s = '0'                           REPORT "T11 INC ovf - NEGATIVE"  SEVERITY ERROR;
+
+        -- Teste 12: DEC  (0 -> 255, overflow)
+        REPORT "Teste 12: DEC (0 -> 255) OVERFLOW" SEVERITY NOTE;
+        A_s   <= to_unsigned(0, 8);
+        CMD_s <= "0011";                                  -- DEC
+        WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
+        ASSERT R_s = to_unsigned(255, 8)                  REPORT "T12 DEC ovf - Resultado" SEVERITY ERROR;
+        ASSERT ZERO_s = '0'                               REPORT "T12 DEC ovf - ZERO"      SEVERITY ERROR;
+        ASSERT OVERFLOW_s = '1'                           REPORT "T12 DEC ovf - OVERFLOW"  SEVERITY ERROR;
+        ASSERT NEGATIVE_s = '1'                           REPORT "T12 DEC ovf - NEGATIVE"  SEVERITY ERROR;
+
+        -- Teste 13: DEC  (10 -> 9, sem overflow)
+        REPORT "Teste 13: DEC (10 -> 9)" SEVERITY NOTE;
+        A_s   <= to_unsigned(10, 8);
+        CMD_s <= "0011";                                  -- DEC
+        WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
+        ASSERT R_s = to_unsigned(9, 8)                    REPORT "T13 DEC - Resultado" SEVERITY ERROR;
+        ASSERT OVERFLOW_s = '0'                           REPORT "T13 DEC - OVERFLOW"  SEVERITY ERROR;
+
+        --------------------------------------------------------------------
+        --  TESTES OPERADORES LÓGICOS  (14 a 20)
+        --------------------------------------------------------------------
+        -- Teste 14: AND  (F0 & 0F = 00)
+        REPORT "Teste 14: AND (0xF0 & 0x0F = 0x00)" SEVERITY NOTE;
+        A_s <= x"F0";  B_s <= x"0F";  CMD_s <= "0100"; -- AND
+        WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
+        ASSERT R_s = x"00" REPORT "T14 AND - Resultado"  SEVERITY ERROR;
+        ASSERT ZERO_s = '1' REPORT "T14 AND - ZERO"      SEVERITY ERROR;
+        ASSERT NEGATIVE_s = '0' REPORT "T14 AND - NEG"   SEVERITY ERROR;
+        ASSERT OVERFLOW_s = '0' REPORT "T14 AND - OVF"   SEVERITY ERROR;
+
+        -- Teste 15: OR   (F0 | 0F = FF)
+        REPORT "Teste 15: OR  (0xF0 | 0x0F = 0xFF)" SEVERITY NOTE;
+        CMD_s <= "0101"; -- OR
+        WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
+        ASSERT R_s = x"FF" REPORT "T15 OR - Resultado"   SEVERITY ERROR;
+        ASSERT ZERO_s = '0' REPORT "T15 OR - ZERO"       SEVERITY ERROR;
+        ASSERT NEGATIVE_s = '1' REPORT "T15 OR - NEG"    SEVERITY ERROR;
+
+        -- Teste 16: NOT  (~F0 = 0F)
+        REPORT "Teste 16: NOT (~0xF0 = 0x0F)" SEVERITY NOTE;
+        CMD_s <= "0110"; -- NOT
+        WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
+        ASSERT R_s = x"0F" REPORT "T16 NOT - Resultado"  SEVERITY ERROR;
+        ASSERT NEGATIVE_s = '0' REPORT "T16 NOT - NEG"   SEVERITY ERROR;
+
+        -- Teste 17: XOR (AA xor 55 = FF)
+        REPORT "Teste 17: XOR (0xAA ^ 0x55 = 0xFF)" SEVERITY NOTE;
+        A_s <= x"AA";  B_s <= x"55";  CMD_s <= "0111"; -- XOR
+        WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
+        ASSERT R_s = x"FF" REPORT "T17 XOR - Resultado" SEVERITY ERROR;
+        ASSERT NEGATIVE_s = '1' REPORT "T17 XOR - NEG"  SEVERITY ERROR;
+
+        -- Teste 18: ROL  (1000_0001 -> 0000_0011)
+        REPORT "Teste 18: ROL (0x81 -> 0x03)" SEVERITY NOTE;
+        A_s <= "10000001";  CMD_s <= "1000"; -- ROL
+        WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
+        ASSERT R_s = "00000011" REPORT "T18 ROL - Resultado" SEVERITY ERROR;
+        ASSERT NEGATIVE_s = '0' REPORT "T18 ROL - NEG"       SEVERITY ERROR;
+
+        -- Teste 19: ROR  (1000_0001 -> 1100_0000)
+        REPORT "Teste 19: ROR (0x81 -> 0xC0)" SEVERITY NOTE;
+        CMD_s <= "1001"; -- ROR
+        WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
+        ASSERT R_s = "11000000" REPORT "T19 ROR - Resultado" SEVERITY ERROR;
+        ASSERT NEGATIVE_s = '1' REPORT "T19 ROR - NEG"       SEVERITY ERROR;
+
+        -- Teste 20: LSL  (1000_0001 -> 0000_0010)  e  LSR (-> 0100_0000)
+        REPORT "Teste 20: LSL (0x81 -> 0x02)" SEVERITY NOTE;
+        CMD_s <= "1010"; -- LSL
+        WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
+        ASSERT R_s = "00000010" REPORT "T20 LSL - Resultado" SEVERITY ERROR;
+
+        REPORT "Teste 21: LSR (0x81 -> 0x40)" SEVERITY NOTE;
+        CMD_s <= "1011"; -- LSR
+        WAIT FOR PROPAGATION_DELAY; WAIT FOR 0 ns;
+        ASSERT R_s = "01000000" REPORT "T21 LSR - Resultado" SEVERITY ERROR;
+
+        -- Fim
+        REPORT "Todos os testes da ALU (aritméticos + lógicos) concluídos." SEVERITY NOTE;
+        WAIT;
     end process;
 
 END;

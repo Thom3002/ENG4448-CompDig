@@ -58,32 +58,68 @@ begin
 
     process (A, B, CMD)
 
-    variable sum_sub_res : unsigned(8 downto 0); -- 9 bits to handle overflow in addition/subtraction
-    begin
+    variable sum_sub_res : unsigned(8 downto 0); -- 9 bits p/ ADD/SUB
+begin
+    -- valores-padrão para evitar latch
+    temp_R        <= (others => '0');
+    temp_overflow <= '0';
 
-        case CMD is
-            when "0000" => -- ADD
-                sum_sub_res := ("0" & A) + ("0" & B); -- Faz a conta com 9 bits para evitar overflow
+    case CMD is
+        when "0000" => -- ADD
+            sum_sub_res := ("0" & A) + ("0" & B);
+            temp_R        <= sum_sub_res(7 downto 0);
+            temp_overflow <= sum_sub_res(8);
 
-            when "0001" => -- SUB
-                sum_sub_res := ("0" & A) - ("0" & B);
+        when "0001" => -- SUB
+            sum_sub_res := ("0" & A) - ("0" & B);
+            temp_R        <= sum_sub_res(7 downto 0);
+            temp_overflow <= sum_sub_res(8);
 
-            -- when "0010" => -- AND
-            --     temp_R <= A and B;  -- AND
-            --     temp_OVERFLOW <= '0';
-            -- when "0011" => -- OR
-            --     temp_R <= A or B;  -- OR
-            --     temp_OVERFLOW <= '0';
+        when "0010" => -- INC
+			 temp_R <= A + 1;
+			 if A = to_unsigned(255,8) then
+				  temp_overflow <= '1';
+			 else
+				  temp_overflow <= '0';
+			 end if;
 
-            -- when "0100" => temp_R <= not A;    -- NOT
-            when others =>
-                temp_R <= (others => '0');
-        end case;
+			when "0011" => -- DEC
+				 temp_R <= A - 1;
+				 if A = to_unsigned(0,8) then
+					  temp_overflow <= '1';
+				 else
+					  temp_overflow <= '0';
+				 end if;
 
-		  temp_R        <= sum_sub_res(7 downto 0);
-        temp_overflow <= sum_sub_res(8);
+        when "0100" => -- AND
+            temp_R <= A and B;
 
-    end process;
+        when "0101" => -- OR
+            temp_R <= A or B;
+
+        when "0110" => -- NOT
+            temp_R <= not A;
+
+        when "0111" => -- XOR
+            temp_R <= A xor B;
+
+        when "1000" => -- ROL
+            temp_R <= A(6 downto 0) & A(7);
+
+        when "1001" => -- ROR
+            temp_R <= A(0) & A(7 downto 1);
+
+        when "1010" => -- LSL
+            temp_R <= A(6 downto 0) & '0';
+
+        when "1011" => -- LSR
+            temp_R <= '0' & A(7 downto 1);
+
+        when others =>
+            temp_R        <= (others => '0');
+            temp_overflow <= '0';
+    end case;
+end process;
 
 	R <= temp_R;
     ZERO     <= '1' when temp_R = 0   else '0';
@@ -92,6 +128,6 @@ begin
 	SMALLER <= '1' when (A < B) and (temp_overflow = '0') else '0';
 	EQUAL   <= '1' when (A = B) and (temp_overflow = '0') else '0';
 
-    OVERFLOW <= temp_overflow when (CMD = "0000" or CMD = "0001") else '0';
+    OVERFLOW <= temp_overflow;
 
 end Behavioral;
