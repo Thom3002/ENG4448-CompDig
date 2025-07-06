@@ -172,43 +172,130 @@ BEGIN
 								  MAR      <= SP;            -- endereço da pilha
 								  RAM_DIN  <= std_logic_vector(registers(to_integer(IR(3 DOWNTO 2))));
 								  RAM_WE   <= '1';                            -- escreve na RAM
-								  state    <= st_write;                       -- SP -- no write
+								  state    <= st_execute;                       -- SP -- no execute
 
 							 -- pop Rx   ss = 01
 							 ELSIF IR(1 DOWNTO 0) = "01" THEN
+								  registers(to_integer(IR(3 DOWNTO 2))) <= DOUT
 								  MAR      <= SP + 1;        -- SP + 1 primeiro
 								  RAM_WE   <= '0';                            -- leitura
-								  state    <= st_write;                       -- captura dado + SP++
+								  state    <= st_execute;                       -- captura dado + SP++
 
 							 -- st Rx, ADDR   ss = 10  (ADDR em PC+1)
 							 ELSIF IR(1 DOWNTO 0) = "10" THEN
 								  MAR      <= PC + 1;        -- lê ADDR no próximo byte
-								  RAM_WE   <= '0';                            -- leitura
-								  state    <= st_write;                       -- faz escrita na 2ª fase
+								  RAM_DIN  <= std_logic_vector(registers(to_integer(IR(3 DOWNTO 2))));
+								  RAM_WE   <= '1';                            -- leitura
+								  state    <= st_execute;                       -- faz escrita na 2ª fase
 
 							 -- ld Rx, ADDR   ss = 11
-							 ELSE                                             -- "11"
+							 ELSE         
+							 	  registers(to_integer(IR(3 DOWNTO 2))) <= DOUT                                    -- "11"
 								  MAR      <= PC + 1;        -- lê ADDR
 								  RAM_WE   <= '0';                            -- leitura
-								  state    <= st_write;                       -- traz dado para Rx
+								  state    <= st_execute;                       -- traz dado para Rx
 							 END IF;
 
 						-- ldr Rx, [Ry]   "1001 Rx Ry"
 						ELSIF IR(7 DOWNTO 4) = "1001" THEN
 							 MAR      <= registers(to_integer(IR(1 DOWNTO 0))); -- endereço = Ry
+							 registers(to_integer(IR(3 DOWNTO 2))) <= DOUT;                                 -- "11"
 							 RAM_WE   <= '0';                                   -- leitura
-							 state    <= st_write;                              -- copia em Rx
+							 state    <= st_execute;                              -- copia em Rx
 
 						-- str Rx, [Ry]   "1010 Rx Ry"
 						ELSIF IR(7 DOWNTO 4) = "1010" THEN
 							 MAR      <= registers(to_integer(IR(1 DOWNTO 0))); -- endereço = Ry
-							 RAM_DIN  <= std_logic_vector(registers(to_integer(IR(3 DOWNTO 2)))); -- dado = Rx
+							 RAM_DIN  <= std_logic_vector(registers(to_integer(IR(1 DOWNTO 0)))); -- dado = Rx
 							 RAM_WE   <= '1';                                   -- escrita
-							 state    <= st_write;
-
+							 state    <= st_execute;
 				
-						END IF;
+						elsif IR(7 downto 4) = "1011" and IR(1 downto 0) = "00" then
+							 registers(to_integer(IR(3 DOWNTO 2))) <= registers(to_integer(IR(1 DOWNTO 0)));
 
+						-- Jump operations
+						
+						-- JMPR Rx --> pc <-- Rx
+						elsif IR(7 downto 4) = "1100" then
+							-- JMP 0x-- --> pc <-- MEM[PC+1]
+							if IR(1 downto 0) = "00" then
+								MAR <= STD_LOGIC_VECTOR(unsigned(PC)+1)
+							elsif IR(1 downto 0) = "01" then
+								MAR <= registers(to_integer(IR(3 DOWNTO 2))); 
+
+							-- BZ Rx --> if (zero) pc <-- Rx else pc <-- pc + 1
+							elsif IR(1 downto 0) = "10" then
+								if ALU_FLAGS(0) = '1' then
+									MAR<= registers(to_integer(IR(3 DOWNTO 2)));
+								else 
+									PC <= PC + 1;
+								end if;
+							-- BNZ Rx --> if (not zero) pc <-- Rx else pc <-- pc + 1
+							elsif IR(1 downto 0) = "11" then
+								if ALU_FLAGS(1) = '0' then
+									MAR<= registers(to_integer(IR(3 DOWNTO 2)));
+								else
+									PC <= PC + 1;
+								end if;
+							end if;
+							state    <= st_execute;
+
+						elsif IR(7 downto 4) = "1101" then
+							if IR(1 downto 0) = "00" then
+								if ALU_FLAGS(2) = '1' then
+									MAR <= registers(to_integer(IR(3 downto 2)));
+								else 
+									PC <= PC+1
+								end if;
+							elsif IR(1 downto 0) = "01" then
+								if ALU_FLAGS(2) = '0' then
+									MAR <= registers(to_integer(IR(3 downto 2)));
+								else 
+									PC <= PC+1
+								end if;
+							elsif IR(1 downto 0) = "10" then
+								if ALU_FLAGS(3) = '1' then
+									MAR <= registers(to_integer(IR(3 downto 2)));
+								else 
+									PC <= PC+1
+								end if;
+							elsif IR(1 downto 0) = "11" then
+								if ALU_FLAGS(3) = '0' then
+									MAR <= registers(to_integer(IR(3 downto 2)));
+								else 
+									PC <= PC+1
+								end if;
+							end if;
+							state    <= st_execute;
+
+						elsif IR(7 downto 4) = "1110" then
+							if IR(1 downto 0) = "00" then
+								if ALU_FLAGS(4) = '1' then
+									MAR <= registers(to_integer(IR(3 downto 2)));
+								else 
+									PC <= PC+1
+								end if;
+							elsif IR(1 downto 0) = "01" then
+								if ALU_FLAGS(5) = '1' then
+									MAR <= registers(to_integer(IR(3 downto 2)));
+								else 
+									PC <= PC+1
+								end if;
+							elsif IR(1 downto 0) = "10" then
+								if ALU_FLAGS(1) = '1' then
+									MAR <= registers(to_integer(IR(3 downto 2)));
+								else 
+									PC <= PC+1
+								end if;
+							end if;
+							state    <= st_execute;
+						elsif IR(7 downto 4) = "1111" then
+							if IR(3 downto 0) = "0000" then
+								PC <= PC+1;
+							elsif IR(3 downto 0) = "1111" then	
+							state    <= st_execute;
+						end if;
+							
 					WHEN st_execute =>
 
 						-- Copia o resultado da ALU para o registrador de destino
@@ -221,6 +308,8 @@ BEGIN
 							ALU_FLAGS.greater  <= alu_gt;
 							ALU_FLAGS.smaller  <= alu_lt;
 						END IF;
+
+
 
 						PC <= PC + 1;
 
