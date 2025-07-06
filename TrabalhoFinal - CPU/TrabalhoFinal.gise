@@ -166,6 +166,10 @@
     <transform xil_pn:end_ts="1751831204" xil_pn:in_ck="1593011697161855950" xil_pn:name="TRANEXT_xstsynthesize_spartan3e" xil_pn:prop_ck="-1448687724961179443" xil_pn:start_ts="1751831199">
       <status xil_pn:value="FailedRun"/>
       <status xil_pn:value="ReadyToRun"/>
+      <status xil_pn:value="OutOfDateForInputs"/>
+      <status xil_pn:value="OutOfDateForOutputs"/>
+      <status xil_pn:value="InputChanged"/>
+      <status xil_pn:value="OutputChanged"/>
       <outfile xil_pn:name=".lso"/>
       <outfile xil_pn:name="_xmsgs/xst.xmsgs"/>
       <outfile xil_pn:name="main.lso"/>
