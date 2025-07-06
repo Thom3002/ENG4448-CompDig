@@ -307,11 +307,71 @@ BEGIN
 							ALU_FLAGS.equal    <= alu_eq;
 							ALU_FLAGS.greater  <= alu_gt;
 							ALU_FLAGS.smaller  <= alu_lt;
+
+							PC <= PC + 1;
+						
+						-- push / pop / st / ld   "1000 Rx ss"
+						ELSIF IR(7 DOWNTO 4) = "1000" THEN
+						-- push Rx  ss = 00
+							IF IR(1 DOWNTO 0) = "00" THEN
+								SP  <= STD_LOGIC_VECTOR(unsigned(SP) - 1);
+								PC  <= STD_LOGIC_VECTOR(unsigned(PC) + 1);
+								MAR <= STD_LOGIC_VECTOR(unsigned(PC) + 1);
+							-- pop Rx   ss = 01
+							ELSIF IR(1 DOWNTO 0) = "01" THEN
+								SP  <= STD_LOGIC_VECTOR(unsigned(SP) + 1);
+								PC  <= STD_LOGIC_VECTOR(unsigned(PC) + 1);
+								MAR <= STD_LOGIC_VECTOR(unsigned(PC) + 1);
+
+							-- st Rx, ADDR   ss = 10  (ADDR em PC+1)
+							ELSIF IR(1 DOWNTO 0) = "10" THEN
+								PC  <= STD_LOGIC_VECTOR(unsigned(PC) + 2);
+								MAR <= STD_LOGIC_VECTOR(unsigned(PC) + 2);
+								
+							-- ld Rx, ADDR   ss = 11
+							ELSE         
+								PC  <= STD_LOGIC_VECTOR(unsigned(PC) + 2);
+								MAR <= STD_LOGIC_VECTOR(unsigned(PC) + 2);                    -- traz dado para Rx
+							END IF;
+
+				   -- ldr Rx, [Ry]   "1001 Rx Ry"
+						ELSIF IR(7 DOWNTO 4) = "1001" THEN
+							PC  <= STD_LOGIC_VECTOR(unsigned(PC) + 1);
+							MAR <= STD_LOGIC_VECTOR(unsigned(PC) + 1);
+						-- str Rx, [Ry]   "1010 Rx Ry"
+						ELSIF IR(7 DOWNTO 4) = "1010" THEN
+							PC  <= STD_LOGIC_VECTOR(unsigned(PC) + 1);
+							MAR <= STD_LOGIC_VECTOR(unsigned(PC) + 1);
+				
+						elsif IR(7 downto 4) = "1011" and IR(1 downto 0) = "00" then
+								registers(to_integer(IR(3 DOWNTO 2))) <= registers(to_integer(IR(1 DOWNTO 0)));
+
+						-- Jump operations
+						
+						-- JMPR Rx --> pc <-- Rx
+						elsif IR(7 downto 4) = "1100" then
+							-- JMP 0x-- --> pc <-- MEM[PC+1]
+							if IR(1 downto 0) = "00" then
+								PC <= DOUT;
+								AR <= DOUT;
+							else
+								PC <= MAR;
+							end if;
+
+						elsif IR(7 downto 4) = "1101" then
+							PC<=MAR;
+
+						elsif IR(7 downto 4) = "1110" then
+							PC<=MAR;
+						elsif IR(7 downto 4) = "1111" then
+							if IR(3 downto 0) = "1111" then	
+								MAR<=PC;
+								
 						END IF;
 
 
 
-						PC <= PC + 1;
+						
 
 						state <= st_fetch;
 
