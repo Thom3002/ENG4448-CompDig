@@ -36,7 +36,7 @@ entity main is
 			LCD_E, LCD_RS, LCD_RW 	: out STD_LOGIC;
 			SF_CE0 						: out STD_LOGIC;
 			LEDS							: out STD_LOGIC_VECTOR(7 downto 0);
-			DOUT_LCD						: out STD_LOGIC_VECTOR(3 downto 0)
+			LCD_DATA						: out STD_LOGIC_VECTOR(3 downto 0)
 		);
 end main;
 

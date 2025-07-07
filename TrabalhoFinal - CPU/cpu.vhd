@@ -320,6 +320,7 @@ BEGIN
 								ALU_FLAGS.smaller  <= alu_lt;
 
 								PC <= PC + 1;
+								MAR <= PC + 1;
 
 							-- push / pop / st / ld   "1000 Rx ss"
 							ELSIF IR(7 DOWNTO 4) = "1000" THEN

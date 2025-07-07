@@ -16,7 +16,7 @@ architecture Behavioral of main_tb is
     signal lcd_rw    : std_logic;
     signal sf_ce0    : std_logic;
     signal leds      : std_logic_vector(7 downto 0);
-    signal dout_lcd  : std_logic_vector(3 downto 0);
+    signal lcd_data  : std_logic_vector(3 downto 0);
 
     -- signals to connect CPU and memory
     signal ram_addr  : std_logic_vector(7 downto 0);
@@ -57,7 +57,7 @@ begin
             LCD_RW  => lcd_rw,
             SF_CE0  => sf_ce0,
             LEDS    => leds,
-            DOUT_LCD=> dout_lcd
+            lcd_data=> lcd_data
         );
 
     -- Connect signals between CPU and memory
