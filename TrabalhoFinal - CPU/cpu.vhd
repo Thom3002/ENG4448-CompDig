@@ -23,8 +23,10 @@ ARCHITECTURE Behavioral OF CPU IS
 
 	TYPE reg_array IS ARRAY(0 TO 3) OF unsigned(7 DOWNTO 0);
 	SIGNAL registers : reg_array := (
-		0 => "10000000",
-		OTHERS => (OTHERS => '0')
+		0 => "00000000",
+		1 => "00000001",
+		2 => "00000010",
+		3 => "00000011"
 	);
 
 	-- ALU signals
