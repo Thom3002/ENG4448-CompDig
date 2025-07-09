@@ -54,6 +54,7 @@ architecture Behavioral of main is
    SIGNAL lcd_data_s: STD_LOGIC_VECTOR(3 DOWNTO 0);
    SIGNAL sf_ce0_s: STD_LOGIC;
    signal init_done : std_logic;
+   signal leds_cpu :  std_logic_vector(7 downto 0);
    
    signal clk_slow : std_logic := '0';
     signal div_cnt   : unsigned(26 downto 0) := (others => '0'); 
@@ -82,7 +83,8 @@ begin
 					RAM_ADDR => ram_addr,
 					RAM_DIN  => ram_din,
 					RAM_DOUT => ram_dout,
-					RAM_WE   => ram_we
+					RAM_WE   => ram_we,
+                    LEDS_OUT => leds_cpu
 			  );
 			  
 			  
@@ -117,6 +119,7 @@ begin
    LCD_RW    <= lcd_rw_s;
    SF_CE0    <= sf_ce0_s;
    LCD_DATA  <= lcd_data_s; 
+   LEDS <= leds_cpu;
 
 
 end Behavioral;

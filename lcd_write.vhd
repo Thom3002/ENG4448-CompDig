@@ -23,10 +23,10 @@ architecture Behavioral of lcd_write is
     signal counter_230n : integer range 0 to 12 := 0;
     signal counter_40m : integer range 0 to 2000 := 0;
     signal counter_1m : integer range 0 to 50 := 0;
-    signal counter_message : integer range 0 to 31 :=0;
+    signal counter_message : integer range 0 to 80 :=0;
     signal nibble  : std_logic_vector(3 downto 0);
     signal counter : integer range 0 to 1000 := 0;
-    type display_data_t is array (0 to 31) of std_logic_vector(7 downto 0);  
+    type display_data_t is array (0 to 79) of std_logic_vector(7 downto 0);  
     signal message : display_data_t;
     subtype byte_t     is std_logic_vector(7 downto 0);
     type     ascii4_a  is array (0 to 3) of byte_t;   -- 4 bytes
@@ -134,14 +134,14 @@ begin
     1 => ascii_op(1),
     2 => ascii_op(2),
     3 => ascii_op(3),
-    16 => binary_to_ascii(memory_data(7)),
-    17 => binary_to_ascii(memory_data(6)),
-    18 => binary_to_ascii(memory_data(5)),
-    19 => binary_to_ascii(memory_data(4)),
-    20 => binary_to_ascii(memory_data(3)),
-    21 => binary_to_ascii(memory_data(2)),
-    22 => binary_to_ascii(memory_data(1)),
-    23 => binary_to_ascii(memory_data(0)),
+    40 => binary_to_ascii(memory_data(7)),
+    41 => binary_to_ascii(memory_data(6)),
+    42 => binary_to_ascii(memory_data(5)),
+    43 => binary_to_ascii(memory_data(4)),
+    44 => binary_to_ascii(memory_data(3)),
+    45 => binary_to_ascii(memory_data(2)),
+    46 => binary_to_ascii(memory_data(1)),
+    47 => binary_to_ascii(memory_data(0)),
     others => x"20");
     process(clk, reset)
     begin
@@ -190,7 +190,7 @@ begin
                         state <= IDLE; -- enviar prxima letra aqui
                         counter_40m <= 0;
                         counter <= 0;
-                        if counter_message = 31 then
+                        if counter_message = 79 then
                          counter_message <= 0;
                         else
                             counter_message <= counter_message + 1;

@@ -33,8 +33,8 @@ architecture rtl of memory is
         9  => "01110000", -- rol R0     -> R0 = 11111100 LCD - OK
         10 => "01110010", -- lsl R0     -> R0 = 11111000 LCD - OK
         11 => "01110011", -- lsr R0     -> R0 = 01111100 LCD - OK
-        12 => "10000000", -- push R0    -> memory[255] = R0 LCD - OK
-        13 => "10000001", -- pop R0     -> R0 = memory[255] 
+        12 => "10000000", -- push R0    -> memory[254] = R0 LCD - OK
+        13 => "10000001", -- pop R0     -> R0 = memory[254] 
         14 => "10000010", -- st R0, 0x20-> memory[32] = R0 LCD - OK
         15 => "00100000", -- addr = 0x20-> part of instruction above 
         16 => "10000011", -- ld R0, 0x20-> R0 = memory[32]
@@ -42,8 +42,8 @@ architecture rtl of memory is
         18 => "10010001", -- ldr R0, R1 -> R0 = memory[R1]
         19 => "10100001", -- str R0, R1 -> memory[R1] = R0
         20 => "10110001", -- mov R0, R1 -> R0 = R1 (000000001)
-        21 => "11000000", -- jmp 0x17   -> jump to instruction at addr 0x17 which is nop
-        22 => "00010110", -- addr 0x19  -> addr of instruction 25 nop
+        21 => "11000000", -- jmp 0x19   -> jump to instruction at addr 0x19 which is nop
+        22 => "00011001", -- addr 0x19  -> addr of instruction idx 25 which is nop
         23 => "00100000", -- inc R0     ->
         24 => "00100000", -- inc R0     ->
         25 => "11110000", -- nop
